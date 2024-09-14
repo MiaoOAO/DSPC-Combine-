@@ -255,423 +255,209 @@ Mat cuda_unsharp_masking(Mat& image) {
 
 
 int main(int argc, char** argv) {
-    Mat processed_image_single_laplacian, processed_image_omp_laplacian, processed_image_cuda_laplacian, processed_image_mpi_laplacian,
-        processed_image_single_unsharp, processed_image_omp_unsharp, processed_image_cuda_unsharp, processed_image_mpi_unsharp;
+    Mat processed_image;
+
+    int choice;
+    int method;
+    bool flag = false;
 
     int64 startTime, endTime;
     double timeTaken;
 
-    string imagePath = "";
-
-    cout << "Image Path: ";
-    getline(cin, imagePath);
-    
-    //  Load the image
-    startTime = getTickCount();
-    Mat image = loadImage(imagePath);
-    timeTaken = measureTime(startTime);
-    cout << "Time taken to load image: " << timeTaken << " seconds" << endl;
+    do {
+        cout << "1:Laplacian Filter 2:Unsharp Masking 3:Display Chart\nWhat algorithm is used:";
+        while (!(cin >> choice) && choice <= 3) {  // Check if the input is of the correct type (int in this case)
+            cin.clear();  // Clear the error flag on cin
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');  // Discard invalid input
+            cout << "Invalid input. Please enter an integer: ";
+        }
 
 
-    //  Display the original image
-    namedWindow("Original Image", WINDOW_AUTOSIZE);
-    imshow("Original Image", image);
-    moveWindow("Original Image", 0, 0);
+
+        if (choice != 3) {
+            cout << "1:OMP 2:CUDA 3:MPI 4:Single Thread\nWhat parallel platform you want to use: ";
+            while (!(cin >> method)) {  // Check if the input is of the correct type (int in this case)
+                cin.clear();  // Clear the error flag on cin
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');  // Discard invalid input
+                cout << "Invalid input. Please enter an integer: ";
+            }
+        }
+
+        string imagePath;
 
 
-    //Laplacian Filter
-        //  Processed image by laplacian with single thread 
-        startTime = getTickCount();
-        processed_image_single_laplacian = single_Laplacian_Filter(image);
-        timeTaken = measureTime(startTime);
-        cout << "\n\nLAPLACIAN FILTER\nTime taken to apply single thread Laplacian filter: " << timeTaken << " seconds" << endl;
-        // Display the sharpened image
-        namedWindow("single thread Laplacian filter processed Image", WINDOW_AUTOSIZE);
-        imshow("single thread Laplacian filter processed Image", processed_image_single_laplacian);
-        moveWindow("single thread Laplacian filter processed Image", 500, 0);
-        // Save the sharpened image
-        imwrite("single_thread_Laplacian filter_processed_" + imagePath + filePath, processed_image_single_laplacian);
+        Mat image;
+
+        if (choice != 3) {
+
+            cin.ignore();  // Ignore leftover newline character
+            cout << "Image Path: ";
+            getline(cin, imagePath);
+
+            image = loadImage(imagePath);
+            if (image.empty()) {
+                cout << "Could not load the image!" << endl;
+                return -1;
+            }
+        }
 
 
-        //  Processed image by laplacian with CUDA
-        startTime = getTickCount();
-        processed_image_cuda_laplacian = cuda_Laplacian_Filter(image);
-        timeTaken = measureTime(startTime);
-        cout << "Time taken to apply cuda Laplacian filter: " << timeTaken << " seconds" << endl;
-        // Display the sharpened image
-        namedWindow("Cuda Laplacian filter processed Image", WINDOW_AUTOSIZE);
-        imshow("Cuda Laplacian filter processed Image", processed_image_cuda_laplacian);
-        moveWindow("Cuda Laplacian filter processed Image", 1000, 0);
-        // Save the sharpened image
-        imwrite("Cuda Laplacian filter_processed_" + imagePath + filePath, processed_image_cuda_laplacian);
 
 
-        //  Processed image by laplacian with MPI
-        //mpi_Laplacian_Filter(argc, argv);
+
+        //auto start = high_resolution_clock::now();
+
+        switch (choice) {
+        case 1: //1:Laplacian Filter
+            if (method == 1) {          //1:OMP
+            }
+
+            else if (method == 2) {     //2:CUDA
+                startTime = getTickCount();
+                processed_image = cuda_Laplacian_Filter(image);
+                timeTaken = measureTime(startTime);
+                cout << "Time taken to apply cuda Laplacian filter: " << timeTaken << " seconds" << endl;
+            }
+
+            else if (method == 3) {     //3:MPI
+                //processed_image = mpi_unsharp_masking(argc, argv);
+                cout << "Please Run in PowerShell";
+            }
+
+            else if (method == 4) {     //4:Single Thread
+                startTime = getTickCount();
+                processed_image = single_Laplacian_Filter(image);
+                timeTaken = measureTime(startTime);
+                cout << "Time taken to apply Single thread Laplacian filter: " << timeTaken << " seconds" << endl;
+                 }
 
 
-    //Unsharp Masking
-         //  Processed image by unsharp with single thread 
-        startTime = getTickCount();
-        processed_image_single_unsharp = single_thread_unsharp_masking(image);
-        timeTaken = measureTime(startTime);
-        cout << "\n\nUNSHARP MASKING\nTime taken to apply single thread Unsharp Masking: " << timeTaken << " seconds" << endl;
-        // Display the sharpened image
-        namedWindow("single thread unsharp masking processed Image", WINDOW_AUTOSIZE);
-        imshow("single thread unsharp masking processed Image", processed_image_single_unsharp);
-        moveWindow("single thread unsharp masking processed Image", 1000, 500);
-        // Save the sharpened image
-        imwrite("single thread unsharp masking_processed_" + imagePath + filePath, processed_image_single_unsharp);
+            break;
+        case 2:
+            if (method == 1) {
+                startTime = getTickCount();
+                processed_image = omp_unsharp_masking(image);
+                timeTaken = measureTime(startTime);
+                cout << "Time taken to apply omp Unsharp Masking: " << timeTaken << " seconds" << endl;
+            }
+            else if (method == 2) {
+                startTime = getTickCount();
+                processed_image = cuda_unsharp_masking(image);
+                timeTaken = measureTime(startTime);
+                cout << "Time taken to apply cuda Unsharp Masking: " << timeTaken << " seconds" << endl;
+            }
+            else if (method == 3) {
+                //processed_image = mpi_Laplacian_Filter(argc, argv);
+                cout << "Please Run in PowerShell";
+            }
+            else if (method == 4) {
+                startTime = getTickCount();
+                processed_image = single_thread_unsharp_masking(image);
+                timeTaken = measureTime(startTime);
+                cout << "Time taken to apply single thread Unsharp Masking: " << timeTaken << " seconds" << endl;
+                // Display the sharpened image
+
+            }
+
+            break;
+        case 3:
+
+            double mpi_e, omp_e, cuda_e, single_e;
+            vector<double> executionTimes;
+            cout << "Enter Execution time for OMP :";
+            while (!(cin >> omp_e)) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter an double: ";
+            }
 
 
-        //  Processed image by unsharp with CUDA
-        startTime = getTickCount();
-        processed_image_omp_unsharp = omp_unsharp_masking(image);
-        timeTaken = measureTime(startTime);
-        cout << "Time taken to apply omp Unsharp Masking: " << timeTaken << " seconds" << endl;
-        // Display the sharpened image
-        namedWindow("omp unsharp masking processed Image", WINDOW_AUTOSIZE);
-        imshow("omp unsharp masking processed Image", processed_image_omp_unsharp);
-        moveWindow("omp unsharp masking processed Image", 500, 500);
-        // Save the sharpened image
-        imwrite("omp unsharp masking_processed_" + imagePath + filePath, processed_image_omp_unsharp);
+
+            cout << "Enter Execution time for CUDa: ";
+            while (!(cin >> cuda_e)) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter an double: ";
+            }
+
+            cout << "Enter Execution time for MPI: ";
+            while (!(cin >> mpi_e)) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter an double: ";
+            }
+
+            cout << "Enter Execution time for Single Thread: ";
+            while (!(cin >> single_e)) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter an double: ";
+            }
+            executionTimes.push_back(omp_e);
+            executionTimes.push_back(cuda_e);
+            executionTimes.push_back(mpi_e);
+            executionTimes.push_back(single_e);
 
 
-        //  Processed image by unsharp with single thread 
-        startTime = getTickCount();
-        processed_image_cuda_unsharp = cuda_unsharp_masking(image);
-        timeTaken = measureTime(startTime);
-        cout << "Time taken to apply cuda Unsharp Masking: " << timeTaken << " seconds" << endl;
-        // Display the sharpened image
-        namedWindow("cuda unsharp masking processed Image", WINDOW_AUTOSIZE);
-        imshow("cuda unsharp masking processed Image", processed_image_cuda_unsharp);
-        moveWindow("cuda unsharp masking processed Image", 0, 500);
-        // Save the sharpened image
-        imwrite("cuda unsharp masking_processed_" + imagePath + filePath, processed_image_cuda_unsharp);
 
-        //  Processed image by unsharp masking with MPI
-        //mpi_unsharp_masking(argc, argv);
+            //BarChart(executionTimes);
+            break;
+        }
+        //auto stop = high_resolution_clock::now();
+
+        //auto duration = duration_cast<milliseconds>(stop - start);
+
+        if (choice != 3) {
+            // Display the original image
+            namedWindow("Original Image", WINDOW_AUTOSIZE);
+            imshow("Original Image", image);
+            moveWindow("Original Image", 0, 0);
+        }
 
 
-    waitKey(0); // Wait for a key press
+
+        // Load and display the processed image
+
+        if (!processed_image.empty() && choice != 3) {
+            namedWindow("Processed Image", WINDOW_AUTOSIZE);
+            imshow("Processed Image", processed_image);
+            moveWindow("Processed Image", 500, 0);
+            waitKey(0); // Wait for a key press
+            destroyAllWindows();
+        }
+        else {
+            cout << "Could not load the processed image!" << endl;
+            waitKey(0); // Wait for a key press
+            destroyAllWindows();
+        }
+
+        /*
+        if (choice != 3) {
+            cout << "Time taken for to precess: " << duration.count() / 1000 << "seconds" << endl;
+
+        }
+        */
+
+        char ans;
+        cout << "\nWant to continue? (y/n)" << endl;
+        cin >> ans;
+        ans = tolower(ans);
+
+        // Check if the input is valid (either 'y' or 'n')
+        if (ans == 'y') {
+            flag = true;
+            cout << "Continue...\n" << endl;
+        }
+        else {
+            flag = false;
+            cout << "Finished...\n" << endl;
+        }
+        //cout << flag << endl;
+
+
+    } while (flag);
+
     return 0;
 }
 
 // mpiexec -n 4 combineDSPC.exe
-
-
-
-
-/*
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <iostream>
-#include <cuda_runtime.h>
-#include <omp.h>
-
-using namespace cv;
-using namespace std;
-
-const string filePath = ".jpg";
-
-
-Mat loadImage(const string& filename) {
-    //change to your own image path here
-    Mat image = imread("C:/Users/josan/image/" + filename + ".jpg", IMREAD_COLOR);
-    return image;
-}
-
-// Function to save an image
-void saveImage(const string& filename, const Mat& image) {
-    imwrite(filename, image);
-}
-
-// Measure time helper function
-double measureTime(int64 start) {
-    int64 end = getTickCount();
-    return (end - start) / getTickFrequency();  // Convert to seconds
-}
-
-
-void apply_morphology(Mat& image, Mat& output) {
-    Mat element = getStructuringElement(MORPH_RECT, Size(1, 1));
-    morphologyEx(image, output, MORPH_OPEN, element);
-    morphologyEx(output, output, MORPH_CLOSE, element);
-}
-
-void image_preprocessing(Mat& image, Mat& preprocessed_image) {
-    int rows = image.rows;
-    int cols = image.cols;
-    int block_size = 64;
-
-    int num_threads = omp_get_max_threads();
-    //cout << "Number of threads available: " << num_threads << endl;
-
-    omp_set_num_threads(num_threads);
-
-    preprocessed_image = image.clone();
-
-#pragma omp parallel
-    {
-#pragma omp for collapse(2) schedule(dynamic)
-        for (int i = 0; i < rows; i += block_size) {
-            for (int j = 0; j < cols; j += block_size) {
-                int block_width = min(block_size, cols - j);
-                int block_height = min(block_size, rows - i);
-
-                Mat block = image(Rect(j, i, block_width, block_height));
-                Mat output_block = block.clone();
-
-                apply_morphology(block, output_block);
-
-#pragma omp critical
-                {
-                    output_block.copyTo(preprocessed_image(Rect(j, i, block_width, block_height)));
-                }
-            }
-        }
-    }
-}
-
-
-// CUDA kernel for applying Laplacian filter
-__global__ void apply_laplacian_cuda(unsigned char* d_input, unsigned char* d_output, int width, int height, int channels, double alpha) {
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-
-    if (x >= width || y >= height) return;
-
-    int idx = (y * width + x) * channels;
-
-    const double laplacianKernel[3][3] = {
-        { 0, -1,  0 },
-        {-1,  4, -1 },
-        { 0, -1,  0 }
-    };
-
-    for (int c = 0; c < channels; ++c) {
-        double result = 0.0;
-        for (int ky = -1; ky <= 1; ++ky) {
-            for (int kx = -1; kx <= 1; ++kx) {
-                int ix = min(max(x + kx, 0), width - 1);
-                int iy = min(max(y + ky, 0), height - 1);
-                int input_idx = (iy * width + ix) * channels + c;
-                result += d_input[input_idx] * laplacianKernel[ky + 1][kx + 1];
-            }
-        }
-
-        double newVal = d_input[idx + c] + alpha * result;
-        d_output[idx + c] = min(max(newVal, 0.0), 255.0);
-    }
-}
-
-// Function to apply Laplacian filter on a single channel using CUDA
-
-void applyLaplacianSharpen(const Mat& inputChannel, Mat& outputChannel, double sharpeningFactor) {
-    int rows = inputChannel.rows;
-    int cols = inputChannel.cols;
-    int channels = 1;  // Single-channel image (grayscale)
-
-    size_t imageSize = rows * cols * channels * sizeof(unsigned char);
-
-    // Allocate device memory
-    unsigned char* d_input;
-    unsigned char* d_output;
-    cudaMalloc((void**)&d_input, imageSize);
-    cudaMalloc((void**)&d_output, imageSize);
-
-    // Copy input channel data to device
-    cudaMemcpy(d_input, inputChannel.data, imageSize, cudaMemcpyHostToDevice);
-
-    // Set block and grid sizes
-    dim3 blockSize(16, 16);
-    dim3 gridSize((cols + blockSize.x - 1) / blockSize.x, (rows + blockSize.y - 1) / blockSize.y);
-
-    // Launch the CUDA kernel for the Laplacian filter
-    apply_laplacian_cuda << <gridSize, blockSize >> > (d_input, d_output, cols, rows, channels, sharpeningFactor);
-
-    // Allocate output channel and copy data back from device
-    outputChannel = Mat(rows, cols, CV_8UC1);
-    cudaMemcpy(outputChannel.data, d_output, imageSize, cudaMemcpyDeviceToHost);
-
-    // Free device memory
-    cudaFree(d_input);
-    cudaFree(d_output);
-}
-
-
-
-// Function to apply Laplacian filter on an image channel
-void apply_laplacian_single(const Mat& inputChannel, Mat& outputChannel, int width, int height, double alpha) {
-    const double laplacianKernel[3][3] = {
-        { 0, -1,  0 },
-        {-1,  4, -1 },
-        { 0, -1,  0 }
-    };
-
-    // Iterate through each pixel
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            double result = 0.0;
-
-            // Apply Laplacian kernel
-            for (int ky = -1; ky <= 1; ++ky) {
-                for (int kx = -1; kx <= 1; ++kx) {
-                    int ix = min(max(x + kx, 0), width - 1);
-                    int iy = min(max(y + ky, 0), height - 1);
-                    result += inputChannel.at<unsigned char>(iy, ix) * laplacianKernel[ky + 1][kx + 1];
-                }
-            }
-
-            // Compute new pixel value after applying the Laplacian filter and sharpening factor
-            double newVal = inputChannel.at<unsigned char>(y, x) + alpha * result;
-            outputChannel.at<unsigned char>(y, x) = saturate_cast<uchar>(newVal);  // Clamp to [0, 255]
-        }
-    }
-}
-
-void applyLaplacianSharpen_single(const Mat& inputChannel, Mat& outputChannel, double sharpeningFactor) {
-    int rows = inputChannel.rows;
-    int cols = inputChannel.cols;
-
-    // Initialize the output channel
-    outputChannel = Mat(rows, cols, CV_8UC1);
-
-    // Apply the Laplacian filter to the input image
-    apply_laplacian_single(inputChannel, outputChannel, cols, rows, sharpeningFactor);
-}
-
-
-void applyLaplacianToColorImage(Mat& inputImage, Mat& outputImage, double sharpeningFactor) {
-    Mat preProcessed;
-    vector<Mat> channels(3);
-
-    split(inputImage, channels);
-
-    vector<Mat> outputChannels(3);
-    for (int i = 0; i < 3; ++i) {
-        image_preprocessing(channels[i], preProcessed);
-        applyLaplacianSharpen(channels[i], outputChannels[i], sharpeningFactor);
-    }
-
-    // Merge the processed channels back into a color image
-    merge(outputChannels, outputImage);
-}
-
-void applyLaplacianToColorImage_single(Mat& inputImage, Mat& outputImage, double sharpeningFactor) {
-    Mat preProcessed;
-    vector<Mat> channels(3);
-
-    split(inputImage, channels);
-
-    vector<Mat> outputChannels(3);
-    for (int i = 0; i < 3; ++i) {
-        image_preprocessing(channels[i], preProcessed);
-        applyLaplacianSharpen_single(channels[i], outputChannels[i], sharpeningFactor);
-    }
-
-    // Merge the processed channels back into a color image
-    merge(outputChannels, outputImage);
-}
-
-Mat single_Laplacian_Filter(Mat& image) {
-
-    //image = loadImage("C:/Users/wongc/source/repos/DSCP/DSCP/Image/IC.png");
-
-    Mat sharpenedColor;
-    // Apply the Laplacian filter
-    applyLaplacianToColorImage_single(image, sharpenedColor, 1);
-
-    //saveImage("C:/Users/wongc/source/repos/DSCP/DSCP/Image/Sharpened_Single.png", sharpenedColor);
-
-    return sharpenedColor;
-
-}
-
-
-// Function to apply Laplacian filter on a color image using CUDA
-Mat cuda_Laplacian_Filter(Mat& image) {
-    if (image.empty()) {
-        cout << "Error: Image not found!" << endl;
-        return Mat();
-    }
-
-    if (image.channels() != 3) {
-        cout << "Error: Input image does not have 3 channels!" << endl;
-        return Mat();
-    }
-
-    // Prepare sharpened color image
-    Mat sharpenedColor;
-    double sharpeningFactor = 1.0;  // Adjust sharpening intensity
-
-    // Apply Laplacian filter on the entire color image using CUDA
-    applyLaplacianToColorImage(image, sharpenedColor, sharpeningFactor);
-
-    return sharpenedColor;  // Return the sharpened image
-}
-
-int main() {
-    Mat processed_image, processed_image2;
-
-    string imagePath = "";
-    cout << "Image Path: ";
-    getline(cin, imagePath);
-
-    int64 startTime, endTime;
-    double timeTaken;
-
-    startTime = getTickCount();
-    Mat image = loadImage(imagePath);
-    timeTaken = measureTime(startTime);
-    cout << "Time taken to load image: " << timeTaken << " seconds" << endl;
-
-    if (image.empty()) {
-        cout << "Could not load the image!" << endl;
-        return -1;
-    }
-
-
-    // Display the original image
-    namedWindow("Original Image", WINDOW_AUTOSIZE);
-    imshow("Original Image", image);
-    moveWindow("Original Image", 0, 0);
-
-
-    //processed_image
-    startTime = getTickCount();
-    processed_image = single_Laplacian_Filter(image);
-    timeTaken = measureTime(startTime);
-    cout << "Time taken to apply single Laplacian filter: " << timeTaken << " seconds" << endl;
-
-
-    // Display the sharpened image
-    namedWindow("single processed Image", WINDOW_AUTOSIZE);
-    imshow("single processed Image", processed_image);
-    moveWindow("single processed Image", 500, 0);
-
-    // Save the sharpened image
-    imwrite("single_processed_" + imagePath + filePath, processed_image);
-
-
-    startTime = getTickCount();
-    processed_image2 = cuda_Laplacian_Filter(image);
-    timeTaken = measureTime(startTime);
-    cout << "Time taken to apply CUDA Laplacian filter: " << timeTaken << " seconds" << endl;
-
-
-    // Display the sharpened image
-    namedWindow("Cuda processed Image2", WINDOW_AUTOSIZE);
-    imshow("Cuda processed Image2", processed_image2);
-    moveWindow("Cuda processed Image2", 1000, 0);
-
-    // Save the sharpened image
-    imwrite("Cuda processed2_" + imagePath + filePath, processed_image2);
-
-
-    waitKey(0); // Wait for a key press
-    return 0;
-}
-*/
-
